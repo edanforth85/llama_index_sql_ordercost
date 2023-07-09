@@ -215,39 +215,28 @@ with chart_tab:
         openai.api_key = api_key
         fig = ""
         prompt = (
-            f"Can you show me how to create a chart of the following data in matplotlib (stacked bar chart by LOB)? {st.session_state['global_response']} "
+            f"Can you show me how to create a chart of the following data in streamlit using plotly express (stacked bar chart by LOB)? {st.session_state['global_response']} "
             f"Just give me the python code with no pip installs and no comments or natural language instructions but do display it as a python block. Don't take any short cuts - "
-            f"you have access to the data as st.session_state['response_table'] (it's a python list, don't declare it in the code you return). "
+            f"you have access to the data as st.session_state['response_table'] (always write it out completely with the prefix st.session_state. it's a python list, don't declare it in the code you return). "
             f"This code has already been ran: import matplotlib.pyplot as plt from collections import defaultdict import numpy as np "
             f"Here is the question it is intended to answer: {st.session_state['query_str']}" 
             f"Show the fig with st.pyplot(fig) instead of plt.show(). "
             f"Include this line to start: for LOB, month, value in response_table: "
             f"Here is a good example response: \n"
-            """import matplotlib.pyplot as plt\n
-            from collections import defaultdict\n
-            import numpy as np\n
-            data = defaultdict(lambda: defaultdict(int))\n
-            for row in st.session_state['response_table']:\n
-            \tlob, month, cost = row\n
-            \tdata[month][lob] += cost\n
-            months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']\n
-            sorted_data = {month: data[month] for month in months}\n
-            labels = list(sorted_data.keys())\n
-            lobs = set(lob for dict_ in sorted_data.values() for lob in dict_.keys())\n
-            values = np.array([[dict_.get(lob, 0) for lob in lobs] for dict_ in sorted_data.values()])\n
-            cumulative = np.cumsum(values, axis=1)\n
-            fig, ax = plt.subplots()\n
-            for i, lob in enumerate(lobs):\n
-            \tif i == 0:\n
-            \t\tax.bar(labels, values[:, i], label=lob)\n
-            \telse:\n
-            \t\tax.bar(labels, values[:, i], bottom=cumulative[:, i-1], label=lob)\n
-            plt.xticks(rotation=45)\n
-            plt.xlabel('Month')\n
-            plt.ylabel('Cost')\n
-            plt.title('Cost for each Line of Business per Month')\n
-            plt.legend(lobs, bbox_to_anchor=(1.05, 1))\n
-            st.pyplot(fig)\n"""
+            """import plotly.express as px\n
+            import pandas as pd\n\n
+
+            # Create a DataFrame\n
+            df = pd.DataFrame(result_table, columns=['LOB', 'Month', 'Value'])\n\n
+
+            # Sort the months\n
+            months_order = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']\n
+            df['Month'] = pd.Categorical(df['Month'], categories=months_order, ordered=True)\n\n
+
+            # Create the stacked bar chart\n
+            fig = px.bar(df, x='Month', y='Value', color='LOB', barmode='stack')\n\n
+
+            st.plotly_chart(fig, theme="streamlit", use_container_width=True)\n"""
             f"make sure to format with tabs not spaces so that the code executes properly this means return escape character t in your response"
         )
 
