@@ -247,12 +247,12 @@ with chart_tab:
                 {"role": "user", "content": prompt}
             ]
         )
-        # st.write(f"response: {str(response)}")
+        st.write(f"response: {str(response)}")
 
         code_blocks = re.findall(r'```(?:python)?(?:\n|\s)(.*?)(?:\n|\s)```', response.choices[0].message['content'], re.DOTALL)
         python_code = "\n".join(block for block in code_blocks if not block.startswith("Output:"))
 
-        # st.write(python_code)
+        st.write(python_code)
         st.write(f"Here is your chart!\n" ) 
 
         try:
