@@ -1,7 +1,10 @@
-altair==4.2.2
-langchain==0.0.154
-llama-index==0.6.13
-matplotlib==3.7.0
-streamlit==1.19.0
-streamlit-chat==0.0.2.2
-transformers==4.29.2
+altair==5.0.1
+langchain==0.0.225
+llama-index==0.7.3
+openai==0.27.8
+pandas==1.5.3
+plotly==5.9.0
+SQLAlchemy==2.0.18
+streamlit==1.24.0
+streamlit-chat==0.1.1
+transformers==4.27.4
