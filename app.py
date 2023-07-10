@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 import matplotlib.pyplot as plt
+import plotly.express as px
 from collections import defaultdict
 import numpy as np
 import re
@@ -215,15 +216,14 @@ with chart_tab:
         openai.api_key = api_key
         fig = ""
         prompt = (
-            f"Can you show me how to create a chart of the following data in streamlit using plotly express (stacked bar chart by LOB)? {st.session_state['global_response']} "
-            f"Just give me the python code with no pip installs and no comments or natural language instructions but do display it as a python block. Don't take any short cuts - "
-            f"you have access to the data as st.session_state['response_table'] (always write it out completely with the prefix st.session_state. it's a python list, don't declare it in the code you return). "
-            f"This code has already been ran: import matplotlib.pyplot as plt from collections import defaultdict import numpy as np "
-            f"Here is the question it is intended to answer: {st.session_state['query_str']}" 
-            f"Show the fig with st.pyplot(fig) instead of plt.show(). "
-            f"Include this line to start: for LOB, month, value in response_table: "
-            f"Here is a good example response: \n"
-            """import plotly.express as px\n
+            f"Can you show me how to create a chart of the following data in streamlit using plotly express (stacked bar chart by LOB)? {st.session_state['global_response']} " \
+            f"Just give me the python code with no pip installs and no comments or natural language instructions but do display it as a python block. Don't take any short cuts - "\
+            f"you have access to the data as st.session_state['response_table'] (always write it out completely with the prefix st.session_state." \
+            f"it's a python list, don't declare it in the code you return). " \
+            f"Here is the question it is intended to answer: {st.session_state['query_str']}" \
+            f"Show the fig with st.plotly_chart(fig, theme='streamlit', use_container_width=True) instead of plt.show(). "\
+            f"Here is a good example response: \n" +
+            """python\nimport plotly.express\n
             import pandas as pd\n\n
 
             # Create a DataFrame\n
@@ -237,12 +237,12 @@ with chart_tab:
             fig = px.bar(df, x='Month', y='Value', color='LOB', barmode='stack')\n\n
 
             st.plotly_chart(fig, theme="streamlit", use_container_width=True)\n"""
-            f"make sure to format with tabs not spaces so that the code executes properly this means return escape character t in your response"
+            f"again! display the code as a python block, not regular text so your response will start as python\nimport plotly.express"
         )
 
         # st.write(f"prompt: {prompt}")
         response = openai.ChatCompletion.create(
-          model="gpt-3.5-turbo", # gpt-3.5-turbo gpt-4-0613
+          model="gpt-3.5-turbo", # gpt-4-0613
           messages=[
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
@@ -253,31 +253,8 @@ with chart_tab:
         code_blocks = re.findall(r'```(?:python)?(?:\n|\s)(.*?)(?:\n|\s)```', response.choices[0].message['content'], re.DOTALL)
         python_code = "\n".join(block for block in code_blocks if not block.startswith("Output:"))
 
-        # # Find any 'pip install' lines and install the packages dynamically
-        # for line in python_code.splitlines():
-        #     if line.strip().startswith("pip install"):
-        #         package = line.strip().split(" ")[-1]
-        #         print(f"Installing package: {package}")
-        #         !pip install {package}
-
-        # # Remove any 'pip install' lines from the extracted code
-        # python_code = "\n".join(line for line in python_code.splitlines() if not line.strip().startswith("pip install"))
-
-        # Execute the extracted Python code and catch any errors
         # st.write(python_code)
-        st.write(f"Here is your chart!\n" ) #+ python_code
-        # try:
-        #     f = StringIO()
-        #     with redirect_stdout(f):
-        #         exec(python_code)
-        #     exec_result = f.getvalue()
-        # except Exception as e:
-        #     error = traceback.format_exc()
-        # st.write(python_code)
-        # exec(python_code)
-        # st.pyplot(fig)
-
-        # st.experimental_rerun()
+        st.write(f"Here is your chart!\n" ) 
 
         try:
             exec(python_code)
