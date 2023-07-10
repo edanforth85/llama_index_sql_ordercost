@@ -1,8 +1,12 @@
 import os
 import streamlit as st
 import plotly.express as px
+# import altair as alt
+# import matplotlib as plt
+# from bokeh.plotting import figure
 from collections import defaultdict
 import numpy as np
+import pandas as pd
 import re
 import openai
 from io import StringIO
@@ -219,18 +223,16 @@ with chart_tab:
         openai.api_key = api_key
         fig = ""
         prompt = (
-            f"Can you show me how to create a chart of the following data in streamlit using plotly express (stacked bar chart by LOB)? {st.session_state['global_response']} " \
+            f"In as few characters as possible, can you show me how to create a chart of the following data in streamlit using plotly express (stacked bar chart by LOB)? {st.session_state['global_response']} " \
             f"Just give me the python code with no pip installs and no comments or natural language instructions but do display it as a python block. Don't take any short cuts - "\
             f"you have access to the data as st.session_state['response_table'] (always write it out completely with the prefix st.session_state." \
             f"it's a python list, don't declare it in the code you return or show the data in your response). " \
             f"Here is the question it is intended to answer: {st.session_state['query_str']}" \
             f"Show the fig with st.plotly_chart(fig, theme='streamlit', use_container_width=True) instead of plt.show(). "\
             f"Here is a good example response: \n" +
-            """'''python\nimport plotly.express as px\nimport pandas as pd\n\n# Create a DataFrame\ndf = pd.DataFrame(st.session_state['response_table'], 
-            columns=['LOB', 'Month', 'Value'])\n\n# Sort the months\nmonths_order = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 
-            'September', 'October', 'November', 'December']\ndf['Month'] = pd.Categorical(df['Month'], categories=months_order, ordered=True)\n\n
-            # Create the stacked bar chart\nfig = px.bar(df, x='Month', y='Value', color='LOB', barmode='stack')\n\nst.plotly_chart(fig, theme=\"streamlit\", use_container_width=True)\n'''\n"""
-            f"again! display the code as a python block, not regular text so your response will start as python\nimport plotly.express"
+            """python\nimport plotly.express as px\nimport pandas as pd\n\ndata = st.session_state['response_table']\n\ndf = pd.DataFrame(data, columns=['LOB', 'Month', 'Cost'])\ndf = df.sort_values(by=['Month'], key=lambda x: pd.Categorical(x, categories=['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']))\n\nfig = px.bar(df, x='Month', y='Cost', color='LOB', barmode='stack')\n\nst.plotly_chart(fig, theme='streamlit', use_container_width=True)\n\n"""
+            f"again! display the code as a python block, not regular text so your response will start as python\nimport plotly.express\ndf = pd.DataFrame(st.session_state['response_table'] and" 
+            f"make sure to sort the df by chronological month order before plotting using \n a list such as months_order = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']"
         )
 
         # st.write(f"prompt: {prompt}")
