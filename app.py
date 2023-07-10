@@ -1,6 +1,6 @@
 import os
 import streamlit as st
-import plotly.express as px
+import matplotlib.pyplot as plt
 from collections import defaultdict
 import numpy as np
 import re
@@ -133,6 +133,10 @@ if 'query_str' not in st.session_state:
     st.session_state['query_str'] = ""
 if 'response_table' not in st.session_state:
     st.session_state['response_table'] = ""
+if 'chart_response' not in st.session_state:
+    st.session_state['chart_response'] = ""    
+if 'global_python' not in st.session_state:
+    st.session_state['global_python'] = ""   
 
 with llama_tab:
     st.subheader("Text2SQL with Llama Index")
@@ -218,24 +222,14 @@ with chart_tab:
             f"Can you show me how to create a chart of the following data in streamlit using plotly express (stacked bar chart by LOB)? {st.session_state['global_response']} " \
             f"Just give me the python code with no pip installs and no comments or natural language instructions but do display it as a python block. Don't take any short cuts - "\
             f"you have access to the data as st.session_state['response_table'] (always write it out completely with the prefix st.session_state." \
-            f"it's a python list, don't declare it in the code you return). " \
+            f"it's a python list, don't declare it in the code you return or show the data in your response). " \
             f"Here is the question it is intended to answer: {st.session_state['query_str']}" \
             f"Show the fig with st.plotly_chart(fig, theme='streamlit', use_container_width=True) instead of plt.show(). "\
             f"Here is a good example response: \n" +
-            """python\nimport plotly.express\n
-            import pandas as pd\n\n
-
-            # Create a DataFrame\n
-            df = pd.DataFrame(result_table, columns=['LOB', 'Month', 'Value'])\n\n
-
-            # Sort the months\n
-            months_order = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']\n
-            df['Month'] = pd.Categorical(df['Month'], categories=months_order, ordered=True)\n\n
-
-            # Create the stacked bar chart\n
-            fig = px.bar(df, x='Month', y='Value', color='LOB', barmode='stack')\n\n
-
-            st.plotly_chart(fig, theme="streamlit", use_container_width=True)\n"""
+            """'''python\nimport plotly.express as px\nimport pandas as pd\n\n# Create a DataFrame\ndf = pd.DataFrame(st.session_state['response_table'], 
+            columns=['LOB', 'Month', 'Value'])\n\n# Sort the months\nmonths_order = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 
+            'September', 'October', 'November', 'December']\ndf['Month'] = pd.Categorical(df['Month'], categories=months_order, ordered=True)\n\n
+            # Create the stacked bar chart\nfig = px.bar(df, x='Month', y='Value', color='LOB', barmode='stack')\n\nst.plotly_chart(fig, theme=\"streamlit\", use_container_width=True)\n'''\n"""
             f"again! display the code as a python block, not regular text so your response will start as python\nimport plotly.express"
         )
 
@@ -247,15 +241,17 @@ with chart_tab:
                 {"role": "user", "content": prompt}
             ]
         )
-        st.write(f"response: {str(response)}")
+        st.session_state['chart_response'] = f"response: {str(response)}"
 
         code_blocks = re.findall(r'```(?:python)?(?:\n|\s)(.*?)(?:\n|\s)```', response.choices[0].message['content'], re.DOTALL)
         python_code = "\n".join(block for block in code_blocks if not block.startswith("Output:"))
 
-        st.write(python_code)
+        st.session_state['global_python'] = python_code
         st.write(f"Here is your chart!\n" ) 
 
         try:
-            exec(python_code)
+            exec(st.session_state['global_python'])
         except Exception as e:
             error = traceback.format_exc()
+    if st.button("Show response", key="response_button"):
+        st.write(st.session_state['chart_response'])
